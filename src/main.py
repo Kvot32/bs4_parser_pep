@@ -111,7 +111,10 @@ def pep(session):
         soup = BeautifulSoup(response.text, 'lxml')
         main_card_tag = find_tag(soup, 'section', {'id': 'pep-content'})
 
-        main_card_dl_tag = find_tag(main_card_tag, 'dl', {'class': 'rfc2822 field-list simple'})
+        main_card_dl_tag = find_tag(main_card_tag,
+                                    'dl',
+                                    {'class': 'rfc2822 field-list simple'}
+                                    )
 
         for tag in main_card_dl_tag:
             if tag.name == 'dt' and tag.text == 'Status:':
