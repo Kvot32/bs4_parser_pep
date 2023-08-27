@@ -129,7 +129,8 @@ def pep(session):
                             f'\nНесовпадающие статусы:\n'
                             f'{pep_link}\n'
                             f'Статус в карточке: {card_status}\n'
-                            f'Ожидаемые статусы: {EXPECTED_STATUS[table_status]}\n'
+                            f'Ожидаемые статусы:'
+                            f' {EXPECTED_STATUS[table_status]}\n'
                         )
 
     result.extend(list(count_status_in_card.items()))
