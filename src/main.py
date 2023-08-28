@@ -12,6 +12,9 @@ from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, MAIN_PEP_URL
 from outputs import control_output
 from utils import find_tag, get_response
 
+PATTERN = r'Python (?P<version>\d\.\d+) \((?P<status>.*)\)'
+prog = re.compile(PATTERN, flags=0)
+
 
 def whats_new(session):
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
@@ -53,10 +56,10 @@ def latest_versions(session):
         raise Exception('Не найден список c версиями Python')
 
     results = [('Ссылка на документацию', 'Версия', 'Статус')]
-    pattern = r'Python (?P<version>\d\.\d+) \((?P<status>.*)\)'
+
     for a_tag in a_tags:
         link = a_tag['href']
-        text_match = re.search(pattern, a_tag.text)
+        text_match = re.search(prog, a_tag.text)
         if text_match is not None:
             version, status = text_match.groups()
         else:
@@ -95,7 +98,7 @@ def pep(session):
 
     if response is None:
         return
-
+    log_messages = []
     soup = BeautifulSoup(response.text, features='lxml')
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tr_tags = section_tag.find_all('tr')
@@ -103,7 +106,7 @@ def pep(session):
     count_status_in_card = defaultdict(int)
     result = [('Статус', 'Количество')]
 
-    for i in tqdm(range(1, len(tr_tags))):
+    for i in tqdm(tr_tags[1:]):
         pep_href_tag = tr_tags[i].a['href']
         pep_link = urljoin(MAIN_PEP_URL, pep_href_tag)
 
@@ -125,7 +128,7 @@ def pep(session):
                     table_status = tr_tags[i].td.text[1:]
 
                     if card_status[0] != table_status:
-                        logging.info(
+                        log_messages.append(
                             f'\nНесовпадающие статусы:\n'
                             f'{pep_link}\n'
                             f'Статус в карточке: {card_status}\n'
@@ -133,9 +136,10 @@ def pep(session):
                             f' {EXPECTED_STATUS[table_status]}\n'
                         )
 
-    result.extend(list(count_status_in_card.items()))
+    result.extend(count_status_in_card.items())
     result.extend([('Total', len(tr_tags) - 1)])
-
+    for message in log_messages:
+        logging.info(message)
     return result
 
 
